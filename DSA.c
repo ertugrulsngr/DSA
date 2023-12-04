@@ -66,15 +66,18 @@ int dsa_add_size_handle(DSA *dsa, size_t addSize)
 }
 
 int dsa_remove_size_handle(DSA *dsa, size_t removeSize){
-    if (dsa->allocatedSize <= DSA_SIZE_COEFFICIENT * (DSA_USED_SIZE(dsa) - removeSize)){
+    if (dsa->allocatedSize <= DSA_SIZE_COEFFICIENT * (DSA_USED_SIZE(dsa) - removeSize))
+    {
         return 1;
     }
     size_t newSize = DSA_SIZE_COEFFICIENT * (DSA_USED_SIZE(dsa) - removeSize);
-    if (newSize == 0){
+    if (newSize == 0)
+    {
         newSize = DSA_SIZE_COEFFICIENT * dsa->elementSize;
     }
     void *temp = realloc(dsa->data, newSize);
-    if (temp == NULL){
+    if (temp == NULL)
+    {
         perror("_dsa_remove_size_handle: ");
         return 0;
     }
@@ -127,9 +130,19 @@ DSA *dsa_create(size_t elementSize)
 
 int dsa_add(DSA *dsa, const void *element)
 {
+    /* Null check */
+    if (!dsa)
+    {
+        return 0;
+    }
+    if (!element)
+    {
+        return 0;
+    }
+
+    // Handle size
     if (!dsa_add_size_handle(dsa, dsa->elementSize))
     {
-        printf("dsa_add: size could not handled.");
         return 0;
     }
     char *p = DSA_INDEX_TO_P(dsa, dsa->length);
@@ -140,6 +153,13 @@ int dsa_add(DSA *dsa, const void *element)
 
 int dsa_remove(DSA *dsa, size_t index)
 {
+    /* Null check */
+    if (!dsa)
+    {
+        return 0;
+    }
+
+    /* Check index is valid */ 
     if (index >= dsa->length)
     {
         printf(DSA_ERR_INVALID_INDEX);
@@ -153,7 +173,6 @@ int dsa_remove(DSA *dsa, size_t index)
     // TODO: Here dsa shifted left. But if size not handled, length couldn't decreased.
     if(!dsa_remove_size_handle(dsa, dsa->elementSize))
     {
-        printf("dsa_remove: size could not handled.\n");
         return 0;
     }
     dsa->length--;
@@ -162,6 +181,17 @@ int dsa_remove(DSA *dsa, size_t index)
 
 int dsa_insert(DSA *dsa, size_t index, const void *element)
 {
+    /* Null check */
+    if (!dsa)
+    {
+        return 0;
+    }
+    if (!element)
+    {
+        return 0;
+    }
+
+    /* Check index is valid */ 
     if (index >= dsa->length)
     {
         printf(DSA_ERR_INVALID_INDEX);
@@ -180,8 +210,14 @@ int dsa_insert(DSA *dsa, size_t index, const void *element)
 
 int dsa_clear(DSA *dsa)
 {
-    if (!dsa_remove_size_handle(dsa, DSA_USED_SIZE(dsa))){
-        printf("dsa_remove: size could not handled.\n");
+    /* Null check */
+    if (!dsa)
+    {
+        return 0;
+    }
+
+    if (!dsa_remove_size_handle(dsa, DSA_USED_SIZE(dsa)))
+    {
         return 0;
     }
     dsa->length = 0;
@@ -190,6 +226,19 @@ int dsa_clear(DSA *dsa)
 
 int dsa_add_multiple(DSA *dsa, const void *arr, size_t arrLength)
 {
+    if (!dsa)
+    {
+        return 0;
+    }
+    if (!arr)
+    {
+        return 0;
+    }
+    if (!arrLength)
+    {
+        return 0;
+    }
+    
     if (!dsa_add_size_handle(dsa, arrLength*dsa->elementSize))
     {
         printf("dsa_add: size could not handled.");
@@ -208,5 +257,4 @@ void dsa_free(DSA *dsa)
         free(dsa->data);
         free(dsa);
     }
-    
 }
