@@ -4,7 +4,7 @@
 
 #define DSA_SIZE_COEFFICIENT 2
 #define DSA_USED_SIZE(dsa) ((dsa->length) * (dsa->elementSize))
-#define DSA_INDEX_TO_P(dsa, index) (((char*)(dsa->data)) + ((dsa->elementSize) * (index)))
+#define DSA_INDEX_TO_P(dsa, index) (((char*)(dsa->data)) + ((dsa->elementSize) * (index))) 
 
 #define DSA_ERR_INVALID_INDEX "Invalid index."
 
@@ -47,13 +47,12 @@ void dsa_memcpy_reverse(void *destEnd, const void *srcEnd, size_t size)
     }
 }
 
-int dsa_add_size_handle(DSA *dsa, int addSize)
+int dsa_add_size_handle(DSA *dsa, size_t addSize)
 {
     if (dsa->allocatedSize >= DSA_USED_SIZE(dsa)+addSize)
     {
         return 1;
     }
-
     size_t newSize = DSA_SIZE_COEFFICIENT * (DSA_USED_SIZE(dsa) + addSize);
     void *temp = realloc(dsa->data, newSize);
     if (temp == NULL)
@@ -66,7 +65,7 @@ int dsa_add_size_handle(DSA *dsa, int addSize)
     return 1;
 }
 
-int dsa_remove_size_handle(DSA *dsa, int removeSize){
+int dsa_remove_size_handle(DSA *dsa, size_t removeSize){
     if (dsa->allocatedSize <= DSA_SIZE_COEFFICIENT * (DSA_USED_SIZE(dsa) - removeSize)){
         return 1;
     }
@@ -189,15 +188,25 @@ int dsa_clear(DSA *dsa)
     return 1;
 }
 
-int dsa_add_multiple(DSA *dsa, const void *arr, size_t arrSize)
+int dsa_add_multiple(DSA *dsa, const void *arr, size_t arrLength)
 {
-    if (!dsa_add_size_handle(dsa, arrSize*dsa->elementSize))
+    if (!dsa_add_size_handle(dsa, arrLength*dsa->elementSize))
     {
         printf("dsa_add: size could not handled.");
         return 0;
     }
     char *p = DSA_INDEX_TO_P(dsa, dsa->length);
-    dsa_memcpy(p, arr, arrSize*dsa->elementSize);
-    dsa->length+=arrSize;
+    dsa_memcpy(p, arr, arrLength*dsa->elementSize);
+    dsa->length+=arrLength;
     return 1;
+}
+
+void dsa_free(DSA *dsa)
+{
+    if (dsa)
+    {
+        free(dsa->data);
+        free(dsa);
+    }
+    
 }
