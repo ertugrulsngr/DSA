@@ -5,7 +5,7 @@
 #define DSA_SIZE_COEFFICIENT 2
 #define DSA_USED_SIZE(dsa) ((dsa->length) * (dsa->elementSize))
 #define DSA_INDEX_TO_P(dsa, index) (((char*)(dsa->data)) + ((dsa->elementSize) * (index))) 
-
+#define DSA_LAST_INDEX(dsa) (dsa->length - 1)
 #define DSA_ERR_INVALID_INDEX "Invalid index."
 
 
@@ -102,6 +102,45 @@ void dsa_shift_block_left(DSA *dsa, size_t blockStartIndex, size_t blockEndIndex
     dsa_memcpy(dest, src, shiftedElementCount * dsa->elementSize);
 }
 
+size_t dsa_remove_multi_shift_handle(DSA *dsa, size_t *indiciesSorted, size_t length)
+{
+    size_t i = 0;
+    size_t totalShiftCount = 0;
+    size_t shiftCount = 1;
+    do
+    {
+        if (indiciesSorted[i] == dsa->length - 1)
+        {
+            totalShiftCount += shiftCount;
+            shiftCount = 1;
+            break;
+        }
+        if (i == length - 1)
+        {
+            totalShiftCount += shiftCount;
+            shiftCount = 1;
+            dsa_shift_block_left(dsa, indiciesSorted[i] + 1, dsa->length - 1, totalShiftCount); 
+        }
+        else
+        {
+            if (indiciesSorted[i+1] == indiciesSorted[i])
+            {
+                continue;
+            }
+            else if (indiciesSorted[i+1] - indiciesSorted[i] == 1)
+            {
+                shiftCount++;
+            }
+            else
+            {
+                totalShiftCount += shiftCount;
+                shiftCount = 1;
+                dsa_shift_block_left(dsa, indiciesSorted[i] + 1, indiciesSorted[i+1] - 1, totalShiftCount);
+            }
+        }
+    } while (++i < length);
+    return totalShiftCount;
+}
 
 
 DSA *dsa_create(size_t elementSize)
@@ -131,11 +170,7 @@ DSA *dsa_create(size_t elementSize)
 int dsa_add(DSA *dsa, const void *element)
 {
     /* Null check */
-    if (!dsa)
-    {
-        return 0;
-    }
-    if (!element)
+    if (!dsa && !element)
     {
         return 0;
     }
@@ -182,11 +217,7 @@ int dsa_remove(DSA *dsa, size_t index)
 int dsa_insert(DSA *dsa, size_t index, const void *element)
 {
     /* Null check */
-    if (!dsa)
-    {
-        return 0;
-    }
-    if (!element)
+    if (!dsa && !element)
     {
         return 0;
     }
@@ -226,15 +257,7 @@ int dsa_clear(DSA *dsa)
 
 int dsa_add_multiple(DSA *dsa, const void *arr, size_t arrLength)
 {
-    if (!dsa)
-    {
-        return 0;
-    }
-    if (!arr)
-    {
-        return 0;
-    }
-    if (!arrLength)
+    if (!dsa && !arr && !arrLength)
     {
         return 0;
     }
@@ -248,6 +271,35 @@ int dsa_add_multiple(DSA *dsa, const void *arr, size_t arrLength)
     dsa_memcpy(p, arr, arrLength*dsa->elementSize);
     dsa->length+=arrLength;
     return 1;
+}
+
+int dsa_remove_multiple(DSA *dsa, const size_t *indicies, size_t indiciesLength)
+{
+    if (!dsa && !indicies && !indiciesLength)
+    {
+        return 0;
+    }
+    if (dsa->length == 0)
+    {
+        return 1;
+    }
+    if (indiciesLength == 1)
+    {
+        return dsa_remove(dsa, indicies[0]);
+    }
+    size_t *indicies_sorted = malloc(sizeof(size_t) * indiciesLength);
+    dsa_memcpy(indicies_sorted, indicies, sizeof(size_t) * indiciesLength);
+    qsort(indicies_sorted, indiciesLength, sizeof(size_t), dsa_size_t_compare);
+
+    if (indicies_sorted[0] >= dsa->length || indicies_sorted[indiciesLength-1] >= dsa->length)
+    {
+        return 0;
+    }
+    size_t removedElementCount = dsa_remove_multi_shift_handle(dsa, indicies_sorted, indiciesLength);
+    dsa_remove_size_handle(dsa, removedElementCount * dsa->elementSize);
+    dsa->length -= removedElementCount;
+    return  1;
+
 }
 
 void dsa_free(DSA *dsa)
