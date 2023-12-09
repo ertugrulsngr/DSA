@@ -57,7 +57,7 @@ int dsa_add_size_handle(DSA *dsa, size_t addSize)
     void *temp = realloc(dsa->data, newSize);
     if (temp == NULL)
     {
-        perror("_dsa_add_size_handle: ");
+        perror("dsa_add_size_handle: ");
         return 0;
     }
     dsa->data = temp;
@@ -129,7 +129,7 @@ DSA *dsa_create(size_t elementSize, size_t initialElementCount)
         return NULL;
     }
     DSA *dsa = (DSA*)malloc(sizeof(DSA));
-    if (dsa == NULL){
+    if (!dsa){
         perror("dsa_create:");
         return NULL;
     }
@@ -137,7 +137,7 @@ DSA *dsa_create(size_t elementSize, size_t initialElementCount)
     dsa->allocatedSize = dsa->elementSize * initialElementCount;
     dsa->length = 0;
     dsa->data = malloc(dsa->allocatedSize);
-    if (dsa->data == NULL)
+    if (!dsa->data)
     {
         free(dsa);
         perror("dsa_create: ");
@@ -321,3 +321,28 @@ int dsa_allocate_additional(DSA *dsa, size_t numberOfElements)
     dsa->allocatedSize = newSize;
     return 1;
 }
+
+int dsa_find(DSA *dsa, const void *element, size_t *indexBuf)
+{  
+    const char *elementP = element;
+    for (size_t i = 0; i<dsa->length; i++)
+    {
+        int found = 1;
+        for (size_t j = 0; j<dsa->elementSize; j++)
+        {
+            if (*(DSA_INDEX_TO_P(dsa, i) + j) != *(elementP + j))
+            {
+                found = 0;
+                break;
+            } 
+        }
+        if (found)
+        {
+            *indexBuf = i;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+

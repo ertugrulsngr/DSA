@@ -23,5 +23,6 @@ int dsa_remove_multiple(DSA *dsa, const size_t *indicies, size_t indiciesLength)
 void dsa_free(DSA *dsa);
 int dsa_shrink2_used_size(DSA *dsa);
 int dsa_allocate_additional(DSA *dsa, size_t numberOfElements);
+int dsa_find(DSA *dsa, const void *element, size_t *indexBuf);
 
 #endif
