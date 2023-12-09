@@ -65,27 +65,6 @@ int dsa_add_size_handle(DSA *dsa, size_t addSize)
     return 1;
 }
 
-int dsa_remove_size_handle(DSA *dsa, size_t removeSize){
-    if (dsa->allocatedSize <= DSA_SIZE_COEFFICIENT * (DSA_USED_SIZE(dsa) - removeSize))
-    {
-        return 1;
-    }
-    size_t newSize = DSA_SIZE_COEFFICIENT * (DSA_USED_SIZE(dsa) - removeSize);
-    if (newSize == 0)
-    {
-        newSize = DSA_SIZE_COEFFICIENT * dsa->elementSize;
-    }
-    void *temp = realloc(dsa->data, newSize);
-    if (temp == NULL)
-    {
-        perror("_dsa_remove_size_handle: ");
-        return 0;
-    }
-    dsa->data = temp;
-    dsa->allocatedSize = newSize;
-    return 1;
-}
-
 void dsa_shift_block_right(DSA *dsa, size_t blockStartIndex, size_t blockEndIndex, size_t shiftCount)
 {
     char *srcEnd = DSA_INDEX_TO_P(dsa, blockEndIndex) + (dsa->elementSize - 1);
@@ -143,10 +122,10 @@ size_t dsa_remove_multi_shift_handle(DSA *dsa, size_t *indiciesSorted, size_t le
 }
 
 
-DSA *dsa_create(size_t elementSize)
+DSA *dsa_create(size_t elementSize, size_t initialElementCount)
 {
-    if (elementSize == 0){
-        perror("dsa_create: element size can not be zero");
+    if (elementSize == 0 && initialElementCount == 0){
+        printf("dsa_create: element size or initial element count can not be zero\n");
         return NULL;
     }
     DSA *dsa = (DSA*)malloc(sizeof(DSA));
@@ -155,7 +134,7 @@ DSA *dsa_create(size_t elementSize)
         return NULL;
     }
     dsa->elementSize = elementSize;
-    dsa->allocatedSize = dsa->elementSize * DSA_SIZE_COEFFICIENT;
+    dsa->allocatedSize = dsa->elementSize * initialElementCount;
     dsa->length = 0;
     dsa->data = malloc(dsa->allocatedSize);
     if (dsa->data == NULL)
@@ -205,11 +184,6 @@ int dsa_remove(DSA *dsa, size_t index)
     {
         dsa_shift_block_left(dsa, index+1, dsa->length-1, 1);
     }
-    // TODO: Here dsa shifted left. But if size not handled, length couldn't decreased.
-    if(!dsa_remove_size_handle(dsa, dsa->elementSize))
-    {
-        return 0;
-    }
     dsa->length--;
     return 1;
 }
@@ -222,16 +196,16 @@ int dsa_insert(DSA *dsa, size_t index, const void *element)
         return 0;
     }
 
-    /* Check index is valid */ 
-    if (index >= dsa->length)
-    {
-        printf(DSA_ERR_INVALID_INDEX);
-        return 0;
-    }
-    if (index == dsa->length-1 || dsa->length == 0)
+    if (index >= dsa->length  || dsa->length == 0)
     {
         return dsa_add(dsa, element);
     }
+    
+    if (!dsa_add_size_handle(dsa, dsa->elementSize))
+    {
+        return 0;
+    }
+    
     dsa_shift_block_right(dsa, index, dsa->length-1, 1);
     char *p = DSA_INDEX_TO_P(dsa, index);
     dsa_memcpy(p, element, dsa->elementSize);
@@ -243,11 +217,6 @@ int dsa_clear(DSA *dsa)
 {
     /* Null check */
     if (!dsa)
-    {
-        return 0;
-    }
-
-    if (!dsa_remove_size_handle(dsa, DSA_USED_SIZE(dsa)))
     {
         return 0;
     }
@@ -296,7 +265,6 @@ int dsa_remove_multiple(DSA *dsa, const size_t *indicies, size_t indiciesLength)
         return 0;
     }
     size_t removedElementCount = dsa_remove_multi_shift_handle(dsa, indicies_sorted, indiciesLength);
-    dsa_remove_size_handle(dsa, removedElementCount * dsa->elementSize);
     dsa->length -= removedElementCount;
     return  1;
 
@@ -309,4 +277,47 @@ void dsa_free(DSA *dsa)
         free(dsa->data);
         free(dsa);
     }
+}
+
+int dsa_shrink2_used_size(DSA *dsa)
+{
+    if (!dsa)
+    {
+        return 0;
+    }
+    if (dsa->allocatedSize <= DSA_USED_SIZE(dsa))
+    {
+        return 1;
+    }
+    void *temp = realloc(dsa->data, DSA_USED_SIZE(dsa));
+    if (temp == NULL)
+    {
+        perror("dsa_shrink2_used_size: ");
+        return 0;
+    }
+    dsa->data = temp;
+    dsa->allocatedSize = DSA_USED_SIZE(dsa);
+    return 1;
+}
+
+int dsa_allocate_additional(DSA *dsa, size_t numberOfElements)
+{
+    if (!dsa)
+    {
+        return 0;
+    }
+    if (numberOfElements == 0)
+    {
+        return 1;
+    }
+    size_t newSize = dsa->allocatedSize + (dsa->elementSize * numberOfElements);
+    void *temp = realloc(dsa->data, newSize);
+    if (temp == NULL)
+    {
+        perror("dsa_allocate_additional: ");
+        return 0;
+    }
+    dsa->data = temp;
+    dsa->allocatedSize = newSize;
+    return 1;
 }
