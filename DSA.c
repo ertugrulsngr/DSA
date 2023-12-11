@@ -149,7 +149,7 @@ DSA *dsa_create(size_t elementSize, size_t initialElementCount)
 int dsa_add(DSA *dsa, const void *element)
 {
     /* Null check */
-    if (!dsa && !element)
+    if (!dsa || !element)
     {
         return 0;
     }
@@ -191,7 +191,7 @@ int dsa_remove(DSA *dsa, size_t index)
 int dsa_insert(DSA *dsa, size_t index, const void *element)
 {
     /* Null check */
-    if (!dsa && !element)
+    if (!dsa || !element)
     {
         return 0;
     }
@@ -226,7 +226,7 @@ int dsa_clear(DSA *dsa)
 
 int dsa_add_multiple(DSA *dsa, const void *arr, size_t arrLength)
 {
-    if (!dsa && !arr && !arrLength)
+    if (!dsa || !arr || !arrLength)
     {
         return 0;
     }
@@ -244,7 +244,7 @@ int dsa_add_multiple(DSA *dsa, const void *arr, size_t arrLength)
 
 int dsa_remove_multiple(DSA *dsa, const size_t *indicies, size_t indiciesLength)
 {
-    if (!dsa && !indicies && !indiciesLength)
+    if (!dsa || !indicies || !indiciesLength)
     {
         return 0;
     }
@@ -306,7 +306,7 @@ int dsa_allocate_additional(DSA *dsa, size_t numberOfElements)
     {
         return 0;
     }
-    if (numberOfElements == 0)
+    if (!numberOfElements)
     {
         return 1;
     }
@@ -323,7 +323,12 @@ int dsa_allocate_additional(DSA *dsa, size_t numberOfElements)
 }
 
 int dsa_find(DSA *dsa, const void *element, size_t *indexBuf)
-{  
+{ 
+    /* Null Check */ 
+    if (!dsa || !indexBuf)
+    {
+        return 0;
+    }
     const char *elementP = element;
     for (size_t i = 0; i<dsa->length; i++)
     {
@@ -347,6 +352,7 @@ int dsa_find(DSA *dsa, const void *element, size_t *indexBuf)
 
 int dsa_replace(DSA *dsa, size_t index, const void *element)
 {
+    /* Null check */
     if (!dsa || !element)
     {
         return 0;
