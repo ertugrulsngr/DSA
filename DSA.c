@@ -345,4 +345,17 @@ int dsa_find(DSA *dsa, const void *element, size_t *indexBuf)
     return 0;
 }
 
+int dsa_replace(DSA *dsa, size_t index, const void *element)
+{
+    if (!dsa || !element)
+    {
+        return 0;
+    }
+    if (index >= dsa->length)
+    {
+        return 0;
+    }
+    dsa_memcpy(DSA_INDEX_TO_P(dsa, index), element, dsa->elementSize);
+    return 1;
+}
 

@@ -17,6 +17,7 @@ DSA *dsa_create(size_t elementSize, size_t initialElementCount);
 int dsa_add(DSA *dsa, const void *element);
 int dsa_remove(DSA *dsa, size_t index);
 int dsa_insert(DSA *dsa, size_t index, const void *element);
+int dsa_replace(DSA *dsa, size_t index, const void *element);
 int dsa_clear(DSA *dsa);
 int dsa_add_multiple(DSA *dsa, const void *arr, size_t arrSize);
 int dsa_remove_multiple(DSA *dsa, const size_t *indicies, size_t indiciesLength);
