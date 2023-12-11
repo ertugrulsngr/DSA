@@ -4,7 +4,6 @@
 
 #define DSA_SIZE_COEFFICIENT 2
 #define DSA_USED_SIZE(dsa) ((dsa->length) * (dsa->elementSize))
-#define DSA_INDEX_TO_P(dsa, index) (((char*)(dsa->data)) + ((dsa->elementSize) * (index))) 
 #define DSA_LAST_INDEX(dsa) (dsa->length - 1)
 #define DSA_ERR_INVALID_INDEX "Invalid index."
 

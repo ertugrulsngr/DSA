@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #define DSA_INITIAL_ELEMENT_COUNT 2
+#define DSA_INDEX_TO_P(dsa, index) (((char*)(dsa->data)) + ((dsa->elementSize) * (index))) 
 
 typedef struct DSA {
     void *data;
