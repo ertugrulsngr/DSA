@@ -324,7 +324,7 @@ int dsa_allocate_additional(DSA *dsa, size_t numberOfElements)
 int dsa_find(DSA *dsa, const void *element, size_t *indexBuf)
 { 
     /* Null Check */ 
-    if (!dsa || !indexBuf)
+    if (!dsa)
     {
         return 0;
     }
@@ -342,7 +342,10 @@ int dsa_find(DSA *dsa, const void *element, size_t *indexBuf)
         }
         if (found)
         {
-            *indexBuf = i;
+            if (!indexBuf)
+            {
+                *indexBuf = i;
+            }
             return 1;
         }
     }
