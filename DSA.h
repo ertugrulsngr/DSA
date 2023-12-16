@@ -6,6 +6,7 @@
 
 #define DSA_INITIAL_ELEMENT_COUNT 2
 #define DSA_INDEX_TO_P(dsa, index) (((char*)(dsa->data)) + ((dsa->elementSize) * (index))) 
+#define DSA_INDEX_AS(dsa, index, type) (((type*)(dsa->data))[index])
 
 typedef struct DSA {
     void *data;
